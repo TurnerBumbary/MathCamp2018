@@ -6,13 +6,13 @@ import java.util.Hashtable;
 
 public class LinkedQueue <E> {
 	StringBuffer trace = new StringBuffer();
-	Hashtable<String, Integer> structMap = new Hashtable();
+	Hashtable<String, Integer> structMap = new Hashtable<String, Integer>();
 	
 	private final Node<E> dummy = new Node<E>(null, null);
 	private final AtomicReference<Node<E>> head = new AtomicReference<Node<E>>(dummy);
 	private final AtomicReference<Node<E>> tail = new AtomicReference<Node<E>>(dummy);
 	
-	private static class Node <E> {
+	public static class Node <E> {
 		final E item;
 		final AtomicReference<Node<E>> next;
 		
@@ -27,7 +27,12 @@ public class LinkedQueue <E> {
 	public String getTrace(){
 		return trace.toString();
 	}
-		
+	
+	public Node<E> getHead()
+	{
+		return head.get();
+	}
+	
 	public LinkedQueue(){
 		structMap.put("Head", 1);
 		structMap.put("Tail", 0);
@@ -77,6 +82,7 @@ public class LinkedQueue <E> {
 			throw new RuntimeException(e);
 		}
 	}
+	
 	
 	public boolean put(E item) {
 		Node<E> newNode = new Node<E>(item, null);
