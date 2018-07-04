@@ -18,8 +18,8 @@ public class CheckSumMC {
 
 	public CheckSumMC() {
 		this.queue = new LinkedQueue<Integer>();
-		this.nTrials = 10;
-		this.nProducers = 10;
+		this.nTrials = 100;
+		this.nProducers = 100;
 		this.barrier = new CyclicBarrier(nProducers + 2);
 	}
 
@@ -58,12 +58,15 @@ public class CheckSumMC {
 			try {
 				numThreads.getAndIncrement();
 				System.out.println("Producer is Running!");
-				int seed = this.hashCode();
+				Integer temp = 0;
 				int sum = 0;
-				for (int i = nTrials; i > 0; --i) {
+				for (int i = 0; i < nTrials; i++)
+				{
+					Integer seed = temp.hashCode();
+					seed = xorShift(seed);
 					queue.put(seed);
 					sum += seed;
-					// seed = xorShift(seed);
+					temp++;
 				}
 				barrier.await();
 				putSum.getAndAdd(sum);
