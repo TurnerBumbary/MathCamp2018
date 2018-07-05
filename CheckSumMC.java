@@ -17,6 +17,7 @@ public class CheckSumMC {
 	private final int nTrials, nProducers;
 	private final AtomicInteger numThreads = new AtomicInteger(1);
 	private static final ArrayList<SnapShotCheckSum> array = new ArrayList<SnapShotCheckSum>();
+	private Integer curNumber = 0;
 
 	public CheckSumMC() {
 		this.queue = new LinkedQueue<Integer>();
@@ -64,16 +65,15 @@ public class CheckSumMC {
 			try {
 				numThreads.getAndIncrement();
 				System.out.println("Producer is Running!");
-				Integer temp = 0;
 				int sum = 0;
 				LinkedQueue<Integer> partialQueue = new LinkedQueue<Integer>();
 				for (int i = 0; i < nTrials; i++) {
-					Integer seed = temp.hashCode();
+					Integer seed = curNumber.hashCode();
 					seed = xorShift(seed);
 					queue.put(seed);
 					partialQueue.put(seed);
 					sum += seed;
-					temp++;
+					curNumber++;
 				}
 				barrier.await();
 				// This section adds the data to the ArrayList
@@ -82,7 +82,6 @@ public class CheckSumMC {
 				pool.execute(monitor);
 				partialBarrier.await();
 				long time = System.nanoTime();
-				System.out.println("Partial Sum: " + monitor.getPartialSum());
 				array.add(new SnapShotCheckSum(time, monitor.getPartialSum(), sum));
 				// --------------------------
 				putSum.getAndAdd(sum);
