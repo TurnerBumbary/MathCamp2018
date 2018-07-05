@@ -14,7 +14,6 @@ public class CheckSumMC {
 	private final AtomicInteger putSum = new AtomicInteger(0);
 	private final AtomicInteger takeSum = new AtomicInteger(0);
 	private final CyclicBarrier barrier;
-	private final CyclicBarrier partialBarrier;
 	private final int nTrials, nProducers;
 	private final AtomicInteger numThreads = new AtomicInteger(1);
 	private static final ArrayList<SnapShotCheckSum> array = new ArrayList<SnapShotCheckSum>();
@@ -24,7 +23,6 @@ public class CheckSumMC {
 		this.nTrials = 100;
 		this.nProducers = 100;
 		this.barrier = new CyclicBarrier(nProducers + 2);
-		this.partialBarrier = new CyclicBarrier(3);
 	}
 
 	public static void main(String[] args) {
@@ -53,7 +51,6 @@ public class CheckSumMC {
 				System.out.println("Producer Sum & Monitor Sum are the same!");
 			else
 				System.out.println("Producer Sum & Monitor Sum are different!");
-			partialBarrier.await();
 			for (SnapShotCheckSum element : array) {
 				System.out.println(element.toString());
 			}
@@ -80,16 +77,15 @@ public class CheckSumMC {
 				}
 				barrier.await();
 				// This section adds the data to the ArrayList
-				PartialMonitor monitor = new PartialMonitor(partialQueue);
+				CyclicBarrier partialBarrier = new CyclicBarrier(2);
+				PartialMonitor monitor = new PartialMonitor(partialQueue, partialBarrier);
 				pool.execute(monitor);
 				partialBarrier.await();
-				int partialSum = monitor.getPartialSum();
 				long time = System.nanoTime();
-				array.add(new SnapShotCheckSum(time, partialSum, sum));
+				System.out.println("Partial Sum: " + monitor.getPartialSum());
+				array.add(new SnapShotCheckSum(time, monitor.getPartialSum(), sum));
 				// --------------------------
 				putSum.getAndAdd(sum);
-				System.out.println("Current Put Sum: " + sum);
-				System.out.println("Partial Put Sum: " + putSum.get());
 				barrier.await();
 			} catch (Exception e) {
 				throw new RuntimeException(e);
@@ -100,24 +96,22 @@ public class CheckSumMC {
 	class PartialMonitor implements Runnable {
 		private LinkedQueue<Integer> partialQueue;
 		private int partialSum = 0;
+		CyclicBarrier partialBarrier;
 
-		public PartialMonitor(LinkedQueue<Integer> initPartialQueue) {
+		public PartialMonitor(LinkedQueue<Integer> initPartialQueue, CyclicBarrier initPartialBarrier) {
 			partialQueue = initPartialQueue;
+			this.partialBarrier = initPartialBarrier;
 		}
 
 		public void run() {
 			try {
 				LinkedQueue.Node<Integer> travel = partialQueue.getHead();
-				int numTraversal = 0;
 				while (travel.next.get() != null) {
 					travel = travel.next.get();
 					int element = travel.item;
-					System.out.println(element);
 					partialSum += element;
-					numTraversal++;
 				}
-				System.out.println(numTraversal);
-				partialBarrier.await();
+				this.partialBarrier.await();
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
