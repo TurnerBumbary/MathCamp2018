@@ -4,6 +4,7 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
 
 //import junit.framework.TestCase;
 
@@ -13,14 +14,17 @@ public class CheckSumMC {
 	private final AtomicInteger putSum = new AtomicInteger(0);
 	private final AtomicInteger takeSum = new AtomicInteger(0);
 	private final CyclicBarrier barrier;
+	private final CyclicBarrier partialBarrier;
 	private final int nTrials, nProducers;
 	private final AtomicInteger numThreads = new AtomicInteger(1);
+	private static final ArrayList<SnapShotCheckSum> array = new ArrayList<SnapShotCheckSum>();
 
 	public CheckSumMC() {
 		this.queue = new LinkedQueue<Integer>();
 		this.nTrials = 100;
 		this.nProducers = 100;
 		this.barrier = new CyclicBarrier(nProducers + 2);
+		this.partialBarrier = new CyclicBarrier(3);
 	}
 
 	public static void main(String[] args) {
@@ -36,7 +40,8 @@ public class CheckSumMC {
 				pool.execute(new Producer());
 			}
 			pool.execute(new Monitor());
-			barrier.await(); // the main method waits for all of the other methods to execute
+			barrier.await(); // the main method waits for all of the other
+								// methods to execute
 			barrier.await(); // wait for threads to be finished
 			int sum1 = putSum.get();
 			int sum2 = takeSum.get();
@@ -48,6 +53,10 @@ public class CheckSumMC {
 				System.out.println("Producer Sum & Monitor Sum are the same!");
 			else
 				System.out.println("Producer Sum & Monitor Sum are different!");
+			partialBarrier.await();
+			for (SnapShotCheckSum element : array) {
+				System.out.println(element.toString());
+			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -60,15 +69,24 @@ public class CheckSumMC {
 				System.out.println("Producer is Running!");
 				Integer temp = 0;
 				int sum = 0;
-				for (int i = 0; i < nTrials; i++)
-				{
+				LinkedQueue<Integer> partialQueue = new LinkedQueue<Integer>();
+				for (int i = 0; i < nTrials; i++) {
 					Integer seed = temp.hashCode();
 					seed = xorShift(seed);
 					queue.put(seed);
+					partialQueue.put(seed);
 					sum += seed;
 					temp++;
 				}
 				barrier.await();
+				// This section adds the data to the ArrayList
+				PartialMonitor monitor = new PartialMonitor(partialQueue);
+				pool.execute(monitor);
+				partialBarrier.await();
+				int partialSum = monitor.getPartialSum();
+				long time = System.nanoTime();
+				array.add(new SnapShotCheckSum(time, partialSum, sum));
+				// --------------------------
 				putSum.getAndAdd(sum);
 				System.out.println("Current Put Sum: " + sum);
 				System.out.println("Partial Put Sum: " + putSum.get());
@@ -76,6 +94,37 @@ public class CheckSumMC {
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
+		}
+	}
+
+	class PartialMonitor implements Runnable {
+		private LinkedQueue<Integer> partialQueue;
+		private int partialSum = 0;
+
+		public PartialMonitor(LinkedQueue<Integer> initPartialQueue) {
+			partialQueue = initPartialQueue;
+		}
+
+		public void run() {
+			try {
+				LinkedQueue.Node<Integer> travel = partialQueue.getHead();
+				int numTraversal = 0;
+				while (travel.next.get() != null) {
+					travel = travel.next.get();
+					int element = travel.item;
+					System.out.println(element);
+					partialSum += element;
+					numTraversal++;
+				}
+				System.out.println(numTraversal);
+				partialBarrier.await();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		public int getPartialSum() {
+			return partialSum;
 		}
 	}
 
@@ -105,5 +154,29 @@ public class CheckSumMC {
 		y ^= (y >>> 21);
 		y ^= (y << 7);
 		return y;
+	}
+
+	class SnapShotCheckSum {
+		private final long time;
+		private final int monitorSum;
+		private final int producerSum;
+		public SnapShotCheckSum(long initTime, int initMonitorSum,
+				int initProducerSum) {
+			time = initTime;
+			monitorSum = initMonitorSum;
+			producerSum = initProducerSum;
+		}
+		public long getTime() {
+			return time;
+		}
+		public int getMonitorSum() {
+			return monitorSum;
+		}
+		public int getProducerSum() {
+			return producerSum;
+		}
+		public String toString() {
+			return "[" + time + ", " + monitorSum + ", " + producerSum + "]";
+		}
 	}
 }
