@@ -4,19 +4,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class CheckSumMCv5 {
 	LinkedQueue<Integer> queue;
-	private final AtomicInteger putSum = new AtomicInteger(0);
 	int takeSum = 0;
 	private final int nTrials, nProducers;
 	private static Thread[] threadArray;
 	private AtomicInteger index = new AtomicInteger(0);
 	private SnapShotCheckSum[] snapshoots;
+	private int[] putSums;
 
 	public CheckSumMCv5() {
 		this.queue = new LinkedQueue<Integer>();
-		this.nTrials = 1;
+		this.nTrials = 2;
 		this.nProducers = 2;
 		threadArray = new Thread[nProducers];
 		snapshoots = new SnapShotCheckSum[nProducers];
+		putSums = new int[nProducers];
 	}
 
 	public static void main(String[] args) {
@@ -37,7 +38,12 @@ public class CheckSumMCv5 {
 			Thread m = new Thread(new Monitor());
 			m.start();
 			m.join();
-			if (putSum.get() == takeSum)
+			int putSum = 0;
+			for(int i = 0; i < nProducers; i++)
+			{
+				putSum += putSums[i];
+			}
+			if (putSum == takeSum)
 				System.out.println("Correct");
 			else
 				System.out.println("Error");
@@ -68,8 +74,7 @@ public class CheckSumMCv5 {
 				long time = System.nanoTime();
 				int i = index.getAndIncrement();
 				snapshoots[i] = new SnapShotCheckSum(time, partialSum, sum);
-				// --------------------------
-				putSum.getAndAdd(sum);
+				putSums[i] = sum;
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
