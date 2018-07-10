@@ -1,0 +1,8 @@
+elapsed time:       00:01:37
+states:             new=482275, visited=200459, backtracked=682734, end=56524
+search:             maxDepth=33, constraints hit=0
+choice generators:  thread=454014 (signal=0, lock=18671, shared ref=132827), data=0
+heap:               new=1407284, released=3645868, max live=714, gc-cycles=682734
+instructions:       48050658
+max memory:         218MB
+loaded code:        classes=89, methods=1386
