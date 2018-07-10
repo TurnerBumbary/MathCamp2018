@@ -1,0 +1,6 @@
+search:             maxDepth=35, constraints hit=0
+choice generators:  thread=725092 (signal=0, lock=24323, shared ref=276991), data=0
+heap:               new=1764602, released=6040771, max live=718, gc-cycles=1150538
+instructions:       61254537
+max memory:         153MB
+loaded code:        classes=89, methods=1386
