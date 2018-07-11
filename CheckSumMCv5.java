@@ -13,7 +13,7 @@ public class CheckSumMCv5 {
 
 	public CheckSumMCv5() {
 		this.queue = new LinkedQueue<Integer>();
-		this.nTrials = 2;
+		this.nTrials = 1;
 		this.nProducers = 2;
 		threadArray = new Thread[nProducers];
 		snapshoots = new SnapShotCheckSum[nProducers];
