@@ -8,7 +8,7 @@ public class CheckSumMCv5 {
 	private final int nTrials, nProducers;
 	private static Thread[] threadArray;
 	private AtomicInteger index = new AtomicInteger(0);
-	private SnapShotCheckSum[] snapshoots;
+	private SnapShotCheckSum[] snapshots;
 	private int[] putSums;
 
 	public CheckSumMCv5() {
@@ -16,7 +16,7 @@ public class CheckSumMCv5 {
 		this.nTrials = 1;
 		this.nProducers = 2;
 		threadArray = new Thread[nProducers];
-		snapshoots = new SnapShotCheckSum[nProducers];
+		snapshots = new SnapShotCheckSum[nProducers];
 		putSums = new int[nProducers];
 	}
 
@@ -73,7 +73,7 @@ public class CheckSumMCv5 {
 				}
 				long time = System.nanoTime();
 				int i = index.getAndIncrement();
-				snapshoots[i] = new SnapShotCheckSum(time, partialSum, sum);
+				snapshots[i] = new SnapShotCheckSum(time, partialSum, sum);
 				putSums[i] = sum;
 			} catch (Exception e) {
 				throw new RuntimeException(e);

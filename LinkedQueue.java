@@ -13,8 +13,8 @@ public class LinkedQueue <E> {
 	private final AtomicReference<Node<E>> tail = new AtomicReference<Node<E>>(dummy);
 	
 	public static class Node <E> {
-		final E item;
-		final AtomicReference<Node<E>> next;
+		public final E item;
+		public final AtomicReference<Node<E>> next;
 		
 		public Node(E item, Node<E> next) {
 			this.item = item;

@@ -21,8 +21,8 @@ public class CheckSumMC {
 
 	public CheckSumMC() {
 		this.queue = new LinkedQueue<Integer>();
-		this.nTrials = 100;
-		this.nProducers = 100;
+		this.nTrials = 3;
+		this.nProducers = 2;
 		this.barrier = new CyclicBarrier(nProducers + 2);
 	}
 
@@ -44,14 +44,13 @@ public class CheckSumMC {
 			barrier.await(); // wait for threads to be finished
 			int sum1 = putSum.get();
 			int sum2 = takeSum.get();
-			System.out.println();
 			System.out.println("Producer Sum: " + sum1);
 			System.out.println("Monitor Sum: " + sum2);
-			System.out.println();
 			if (sum1 == sum2)
 				System.out.println("Producer Sum & Monitor Sum are the same!");
 			else
 				System.out.println("Producer Sum & Monitor Sum are different!");
+			System.out.println("");
 			for (SnapShotCheckSum element : array) {
 				System.out.println(element.toString());
 			}
@@ -64,7 +63,6 @@ public class CheckSumMC {
 		public void run() {
 			try {
 				numThreads.getAndIncrement();
-				System.out.println("Producer is Running!");
 				int sum = 0;
 				LinkedQueue<Integer> partialQueue = new LinkedQueue<Integer>();
 				for (int i = 0; i < nTrials; i++) {
@@ -125,7 +123,6 @@ public class CheckSumMC {
 		public void run() {
 			try {
 				numThreads.getAndIncrement();
-				System.out.println("Monitor is Running!");
 				int sum = 0;
 				barrier.await();
 				LinkedQueue.Node<Integer> travel = queue.getHead();
