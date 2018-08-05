@@ -1,0 +1,18 @@
+Partial Order Reduction Statistics
+1-Element
+Original:  80
+Duplciate:  4
+Condition 1:  2
+Condition 2:  
+
+2-Elements
+Original:  286
+Duplciate:  22
+Condition 1:  11
+Condition 2:
+
+3-Elements
+Original:  3110
+Duplciate:  122
+Condition 1:  61
+Condition 2:
